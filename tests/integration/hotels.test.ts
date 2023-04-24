@@ -17,6 +17,7 @@ import {
   createRoomWithHotelId,
 } from '../factories';
 import { cleanDb, generateValidToken } from '../helpers';
+import ticketsRepository from '@/repositories/tickets-repository';
 
 beforeAll(async () => {
   await init();
@@ -105,18 +106,33 @@ describe('GET /hotels', () => {
       );
     });
 
-    it('should respond with status 200 and an empty array', async () => {
+    it('should respond with status 404 and an empty array', async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeWithHotel();
+
+      //Hoteis no banco
+
+      const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toEqual(httpStatus.NOT_FOUND);
+      expect(response.body).toEqual([]);
+    });
+
+    it('should respond with status 404 and an empty array', async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
       const enrollment = await createEnrollmentWithAddress(user);
       const ticketType = await createTicketTypeWithHotel();
       const ticket = await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
+
       const payment = await createPayment(ticket.id, ticketType.price);
       //Hoteis no banco
 
       const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
-      expect(response.status).toEqual(httpStatus.OK);
+      expect(response.status).toEqual(httpStatus.NOT_FOUND);
       expect(response.body).toEqual([]);
     });
   });

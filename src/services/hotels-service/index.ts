@@ -16,6 +16,10 @@ async function listHotels(userId: number) {
   //Tem ticket pago isOnline false e includesHotel true
   const ticket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
 
+  if (!ticket) {
+    throw notFoundError();
+  }
+
   if (!ticket || ticket.status === 'RESERVED' || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
     throw cannotListHotelsError();
   }
@@ -25,11 +29,17 @@ async function getHotels(userId: number) {
   await listHotels(userId);
 
   const hotels = await hotelRepository.findHotels();
+  if (!hotels) {
+    throw notFoundError();
+  }
   return hotels;
 }
 
 async function getHotelsWithRooms(userId: number, hotelId: number) {
   await listHotels(userId);
+
+  const ticket = await ticketsRepository.findTicketByEnrollmentId(12);
+
   const hotel = await hotelRepository.findRoomsByHotelId(hotelId);
 
   if (!hotel) {
